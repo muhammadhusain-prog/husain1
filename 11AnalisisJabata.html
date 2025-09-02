@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Dokumen Analisis Jabatan Visual - MSDM</title>
+    <!-- Memuat Tailwind CSS untuk styling UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Times+New+Roman&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Styling utama untuk area dokumen yang akan dicetak/di-PDF-kan */
+        #document-output {
+            font-family: 'Times New Roman', Times, serif; /* Font formal untuk dokumen */
+            background-color: white;
+            padding: 2.5rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            max-width: 8.5in; /* Lebar standar kertas */
+            margin: 2rem auto;
+            color: #111827; /* Warna teks hitam pekat */
+        }
+        
+        #val-header-image {
+            width: 100%;
+            height: 250px; /* Tinggi banner gambar */
+            object-fit: cover; /* Agar gambar tidak gepeng */
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            background-color: #f3f4f6; /* Placeholder color */
+        }
+
+        .doc-section-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.125rem; /* 18px */
+            margin-top: 1.75rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #d1d5db;
+            padding-bottom: 0.5rem;
+        }
+
+        .doc-item {
+            display: grid;
+            grid-template-columns: 200px 20px 1fr; /* Kolom untuk Label, Titik Dua, dan Value */
+            align-items: start;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem; 
+        }
+        
+        .doc-item-label {
+            font-weight: 600;
+        }
+
+        .doc-sub-item {
+             margin-bottom: 0.75rem;
+        }
+
+        .doc-sub-item-label {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .doc-sub-item-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* CSS khusus untuk mode cetak (Print to PDF) */
+        @media print {
+            body {
+                background-color: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+            #document-output {
+                box-shadow: none;
+                border: none;
+                margin: 0;
+                padding: 0;
+                max-width: 100%;
+                font-size: 12pt;
+            }
+            #val-header-image {
+                border-radius: 0;
+            }
+            .doc-item, .doc-sub-item-content, .doc-sub-item-label {
+                font-size: 12pt;
+             }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header Aplikasi -->
+        <header class="text-center mb-8 no-print">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">Generator Dokumen Analisis Jabatan Visual</h1>
+            <p class="text-md text-slate-600 mt-2">Buat dokumen analisis jabatan formal, lengkap dengan gambar header yang relevan.</p>
+        </header>
+
+        <!-- UI Kontrol -->
+        <main class="bg-white p-6 sm:p-8 rounded-xl shadow-lg max-w-2xl mx-auto no-print">
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+                <input type="text" id="job-title-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg" placeholder="Ketik nama jabatan..." required>
+                <button id="generate-btn" class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 whitespace-nowrap">
+                    Buat Dokumen
+                </button>
+            </div>
+        </main>
+        
+        <div id="result-wrapper" class="mt-8">
+            <div id="download-btn-wrapper" class="text-center mb-6 no-print hidden">
+                 <button onclick="window.print()" class="bg-green-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300">
+                    Unduh sebagai PDF
+                </button>
+            </div>
+            <div id="status-display" class="text-center text-gray-500 py-10">
+                <p id="status-text">Dokumen visual akan muncul di sini setelah dibuat.</p>
+            </div>
+            
+            <!-- Kontainer Dokumen yang akan Dicetak -->
+            <div id="document-output" class="hidden">
+                <!-- GAMBAR HEADER GENERATED AI -->
+                <img id="val-header-image" src="https://placehold.co/800x250/e2e8f0/9ca3af?text=Gambar+Akan+Dibuat+AI" alt="Visualisasi Jabatan">
+
+                <!-- Bagian A: Identitas Jabatan -->
+                <div class="doc-section-title">A. IDENTITAS JABATAN</div>
+                <div class="doc-item">
+                    <span class="doc-item-label">Nama Jabatan</span><span>:</span><span id="val-nama-jabatan"></span>
+                </div>
+                <div class="doc-item">
+                    <span class="doc-item-label">Departemen</span><span>:</span><span id="val-departemen"></span>
+                </div>
+                <div class="doc-item">
+                    <span class="doc-item-label">Atasan Langsung</span><span>:</span><span id="val-atasan"></span>
+                </div>
+
+                <!-- Bagian B: Uraian Jabatan -->
+                <div class="doc-section-title">B. URAIAN JABATAN (JOB DESCRIPTION)</div>
+                <div class="doc-sub-item">
+                    <div class="doc-sub-item-label">Ringkasan Jabatan:</div>
+                    <div id="val-ringkasan" class="doc-sub-item-content"></div>
+                </div>
+                 <div class="doc-sub-item">
+                    <div class="doc-sub-item-label">Tugas & Tanggung Jawab Utama:</div>
+                    <div id="val-tugas" class="doc-sub-item-content"></div>
+                </div>
+
+                <!-- Bagian C: Spesifikasi Jabatan -->
+                <div class="doc-section-title">C. SPESIFIKASI JABATAN (JOB SPECIFICATION)</div>
+                <div class="doc-sub-item">
+                    <div class="doc-sub-item-label">Pendidikan & Kualifikasi:</div>
+                    <div id="val-pendidikan" class="doc-sub-item-content"></div>
+                </div>
+                 <div class="doc-sub-item">
+                    <div class="doc-sub-item-label">Pengalaman Kerja:</div>
+                    <div id="val-pengalaman" class="doc-sub-item-content"></div>
+                </div>
+                 <div class="doc-sub-item">
+                    <div class="doc-sub-item-label">Pengetahuan (Knowledge):</div>
+                    <div id="val-pengetahuan" class="doc-sub-item-content"></div>
+                </div>
+                 <div class="doc-sub-item">
+                    <div class="doc-sub-item-label">Keterampilan (Skills):</div>
+                    <div id="val-keterampilan" class="doc-sub-item-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const jobTitleInput = document.getElementById('job-title-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const statusDisplay = document.getElementById('status-display');
+        const statusText = document.getElementById('status-text');
+        const documentOutput = document.getElementById('document-output');
+        const downloadBtnWrapper = document.getElementById('download-btn-wrapper');
+        const headerImage = document.getElementById('val-header-image');
+        
+        const fields = {
+            'nama-jabatan': document.getElementById('val-nama-jabatan'),
+            'departemen': document.getElementById('val-departemen'),
+            'atasan': document.getElementById('val-atasan'),
+            'ringkasan': document.getElementById('val-ringkasan'),
+            'tugas': document.getElementById('val-tugas'),
+            'pendidikan': document.getElementById('val-pendidikan'),
+            'pengalaman': document.getElementById('val-pengalaman'),
+            'pengetahuan': document.getElementById('val-pengetahuan'),
+            'keterampilan': document.getElementById('val-keterampilan'),
+        };
+
+        generateBtn.addEventListener('click', generateAnalysis);
+
+        async function generateAnalysis() {
+            const jobTitle = jobTitleInput.value.trim();
+            if (!jobTitle) {
+                alert('Mohon masukkan nama jabatan.');
+                return;
+            }
+
+            setLoadingState(true);
+
+            // Prompt untuk Teks
+            const textPrompt = `Anda adalah seorang Manajer HRD profesional di Indonesia. Buatkan data untuk analisis jabatan posisi: "${jobTitle}". Berikan respons HANYA berupa data yang diminta, masing-masing dibungkus dengan penanda unik. [DEPARTEMEN]...[/DEPARTEMEN] [ATASAN]...[/ATASAN] [RINGKASAN]...[/RINGKASAN] [TUGAS]...[/TUGAS] [PENDIDIKAN]...[/PENDIDIKAN] [PENGALAMAN]...[/PENGALAMAN] [PENGETAHUAN]...[/PENGETAHUAN] [KETERAMPILAN]...[/KETERAMPILAN]`;
+            
+            // Prompt untuk Gambar
+            const imagePrompt = `Ilustrasi abstrak dan profesional yang merepresentasikan konsep "${jobTitle}". Gaya korporat, bersih, minimalis, palet warna biru dan emas.`;
+
+            try {
+                // Panggil API untuk teks dan gambar secara bersamaan
+                const [textData, imageData] = await Promise.all([
+                    generateText(textPrompt),
+                    generateImage(imagePrompt)
+                ]);
+
+                // Proses dan tampilkan hasil
+                populateDocument(jobTitle, textData, imageData);
+                
+                statusDisplay.classList.add('hidden');
+                documentOutput.classList.remove('hidden');
+                downloadBtnWrapper.classList.remove('hidden');
+
+            } catch (error) {
+                statusText.textContent = `Terjadi kesalahan: ${error.message}`;
+                statusDisplay.classList.remove('hidden');
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        async function generateText(prompt) {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API teks gagal: ${response.statusText}`);
+            const result = await response.json();
+            return result.candidates?.[0]?.content?.parts?.[0]?.text;
+        }
+
+        async function generateImage(prompt) {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+            const payload = { instances: [{ prompt }], parameters: { "sampleCount": 1 } };
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API gambar gagal: ${response.statusText}`);
+            const result = await response.json();
+            return result.predictions?.[0]?.bytesBase64Encoded;
+        }
+        
+        function populateDocument(jobTitle, rawText, base64Image) {
+             if (base64Image) {
+                headerImage.src = `data:image/png;base64,${base64Image}`;
+            }
+
+            fields['nama-jabatan'].textContent = jobTitle;
+            fields['departemen'].textContent = parseContent(rawText, 'DEPARTEMEN');
+            fields['atasan'].textContent = parseContent(rawText, 'ATASAN');
+            fields['ringkasan'].textContent = parseContent(rawText, 'RINGKASAN');
+            fields['tugas'].innerHTML = parseContent(rawText, 'TUGAS').replace(/- /g, '• ').replace(/\n/g, '<br>');
+            fields['pendidikan'].textContent = parseContent(rawText, 'PENDIDIKAN');
+            fields['pengalaman'].textContent = parseContent(rawText, 'PENGALAMAN');
+            fields['pengetahuan'].textContent = parseContent(rawText, 'PENGETAHUAN');
+            fields['keterampilan'].textContent = parseContent(rawText, 'KETERAMPILAN');
+        }
+
+        function parseContent(text, tag) {
+            try {
+                return text.split(`[${tag}]`)[1].split(`[/${tag}]`)[0].trim();
+            } catch (e) {
+                return "Data tidak tersedia.";
+            }
+        }
+
+        function setLoadingState(isLoading) {
+            generateBtn.disabled = isLoading;
+            if (isLoading) {
+                generateBtn.textContent = 'Memproses...';
+                statusText.innerHTML = '<div class="animate-spin h-5 w-5 border-b-2 border-blue-600 rounded-full mx-auto"></div> <p class="mt-2">AI sedang membuat teks & gambar...</p>';
+                statusDisplay.classList.remove('hidden');
+                documentOutput.classList.add('hidden');
+                downloadBtnWrapper.classList.add('hidden');
+            } else {
+                generateBtn.textContent = 'Buat Dokumen';
+            }
+        }
+    </script>
+</body>
+</html>
